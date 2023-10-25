@@ -18,6 +18,8 @@ class NeuronComparator:
     catmaid_neuron: pymaid.CatmaidNeuron
     predicted_synapses: pd.DataFrame
     ground_truth_synapses: pd.DataFrame
+    _old_predicted_synapses: pd.DataFrame
+    _old_ground_truth_synapses: pd.DataFrame
 
     def __init__(self,
                  neuron_meta: Dict[str, Any],
@@ -52,6 +54,14 @@ class NeuronComparator:
         if load_synapses:
             self.get_post_synapses_ground_truth()
             self.get_post_synapses_predicted()
+
+    def load_synapse_coords(self):
+        if not self.ground_truth_synapses.empty:
+            self._old_ground_truth_synapses = self.ground_truth_synapses
+            self._old_predicted_synapses = self.predicted_synapses
+        pickle_fn = './data/synapse_tables/{}_groundtruth_synapses.pkl'.format(self.name)
+        self.ground_truth_synapses = pd.read_pickle(pickle_fn)
+        self.predicted_synapses = pd.read_pickle('./data/synapse_tables/{}_predicted_synapses.pkl'.format(self.name))
 
     def get_mesh_neuron(self):
         """Get the mesh for the neuron from the cloudvolume."""
@@ -123,3 +133,4 @@ class NeuronComparator:
                 synapse_table['post_pt_position_v4'] = transforms.realignment.fanc3_to_4(
                     self.get_synapse_array(synapse_table.post_pt_position_v3)).tolist()
         return synapse_table
+
